@@ -1,0 +1,70 @@
+name: Build Translations
+
+on:
+  push:
+    branches: [ master  build ]
+  pull_request:
+    branches: [ master build ]
+  workflow_dispatch:
+
+jobs:
+  build-translations:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, windows-2022]
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Install Qt (Linux)
+      if: matrix.os == 'ubuntu-20.04'
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '5.15.2'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        dir: '${{ github.workspace }}/qt'
+    
+    - name: Install Qt (Windows)
+      if: matrix.os == 'windows-2022'
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '5.15.2'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        dir: '${{ github.workspace }}/qt'
+    
+    - name: Install minimal dependencies (Linux)
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential
+    
+    - name: Install minimal dependencies (Windows)
+      if: matrix.os == 'windows-2022'
+      run: |
+        choco install cmake -y
+      shell: cmd
+    
+    - name: Update and compile translations
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build . --target update_translations
+        cmake --build . --target compile_translations
+    
+    - name: Upload compiled translation files
+      uses: actions/upload-artifact@v4
+      with:
+        name: compiled-translations-${{ matrix.os }}
+        path: |
+          build/src/*.qm
+          src/translations/*.qm

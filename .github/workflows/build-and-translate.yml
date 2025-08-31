@@ -1,0 +1,127 @@
+name: Build and Translate
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, windows-2019]
+        include:
+          - os: ubuntu-20.04
+            artifact-name: scantailor-advanced-linux
+          - os: windows-2019
+            artifact-name: scantailor-advanced-windows
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: Install Qt (Linux)
+      if: matrix.os == 'ubuntu-20.04'
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        dir: '${{ github.workspace }}/qt'
+        modules: 'qttranslations'
+    
+    - name: Install Qt (Windows)
+      if: matrix.os == 'windows-2019'
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        dir: '${{ github.workspace }}/qt'
+        modules: 'qttranslations'
+    
+    - name: Install dependencies (Linux)
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libboost-all-dev libjpeg-dev libpng-dev libtiff-dev zlib1g-dev cmake build-essential
+    
+    - name: Install dependencies (Windows)
+      if: matrix.os == 'windows-2019'
+      run: |
+        choco install boost-msvc-14.2 -y
+        choco install cmake -y
+      shell: cmd
+    
+    - name: Update translations
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        cmake --build . --target update_translations
+    
+    - name: Compile translations
+      run: |
+        cd build
+        cmake --build . --target compile_translations
+    
+    - name: Build project (Linux)
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        cd build
+        cmake --build . --config Release
+    
+    - name: Build project (Windows)
+      if: matrix.os == 'windows-2019'
+      run: |
+        cd build
+        cmake --build . --config Release
+    
+    - name: Package artifacts (Linux)
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        cd build
+        mkdir -p ${{ matrix.artifact-name }}
+        cp -r bin/* ${{ matrix.artifact-name }}/ || true
+        cp -r share/* ${{ matrix.artifact-name }}/ || true
+        tar -czf ${{ matrix.artifact-name }}.tar.gz ${{ matrix.artifact-name }}
+    
+    - name: Package artifacts (Windows)
+      if: matrix.os == 'windows-2019'
+      run: |
+        cd build
+        mkdir ${{ matrix.artifact-name }}
+        xcopy /E /I bin ${{ matrix.artifact-name }}\bin 2>nul || true
+        xcopy /E /I translations ${{ matrix.artifact-name }}\translations 2>nul || true
+        7z a ${{ matrix.artifact-name }}.zip ${{ matrix.artifact-name }}
+      shell: cmd
+    
+    - name: Upload build artifacts (Linux)
+      if: matrix.os == 'ubuntu-20.04'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: build/${{ matrix.artifact-name }}.tar.gz
+    
+    - name: Upload build artifacts (Windows)
+      if: matrix.os == 'windows-2019'
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: build/${{ matrix.artifact-name }}.zip
+    
+    - name: Upload compiled translation files
+      uses: actions/upload-artifact@v3
+      with:
+        name: compiled-translations-${{ matrix.os }}
+        path: |
+          build/src/*.qm
+          src/translations/*.qm

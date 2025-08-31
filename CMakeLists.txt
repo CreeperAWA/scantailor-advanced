@@ -14,6 +14,9 @@ endif()
 
 project("ScanTailor Advanced")
 
+# Add option to skip image library dependencies for translation-only builds
+option(TRANSLATION_ONLY "Build only translations, skip image library dependencies" OFF)
+
 # Set compiler flags.
 set(CMAKE_CXX_STANDARD 17)
 
@@ -128,37 +131,42 @@ endif()
 
 #=================================== JPEG ===================================#
 
-find_package(JPEG REQUIRED)
+if (NOT TRANSLATION_ONLY)
+  find_package(JPEG REQUIRED)
 
-if (WIN32)
-  add_dynamic_library_locations(JPEG::JPEG)
+  if (WIN32)
+    add_dynamic_library_locations(JPEG::JPEG)
+  endif()
 endif()
 
 #=================================== ZLIB ===================================#
 
-find_package(ZLIB REQUIRED)
+if (NOT TRANSLATION_ONLY)
+  find_package(ZLIB REQUIRED)
 
-if (WIN32)
-  add_dynamic_library_locations(ZLIB::ZLIB)
+  if (WIN32)
+    add_dynamic_library_locations(ZLIB::ZLIB)
+  endif()
 endif()
 
 #================================== PNG ==================================#
 
-find_package(PNG REQUIRED)
+if (NOT TRANSLATION_ONLY)
+  find_package(PNG REQUIRED)
 
-if (WIN32)
-  add_dynamic_library_locations(PNG::PNG)
+  if (WIN32)
+    add_dynamic_library_locations(PNG::PNG)
+  endif()
 endif()
 
 #=================================== TIFF ===================================#
 
-find_package(TIFF REQUIRED)
+if (NOT TRANSLATION_ONLY)
+  find_package(TIFF REQUIRED)
 
-if (WIN32)
-  add_dynamic_library_locations(TIFF::TIFF)
-  set_target_properties(
-      TIFF::TIFF PROPERTIES
-      INTERFACE_COMPILE_DEFINITIONS USE_LIBTIFF_DLL)
+  if (WIN32)
+    add_dynamic_library_locations(TIFF::TIFF)
+  endif()
 endif()
 
 #================================= Boost ================================#

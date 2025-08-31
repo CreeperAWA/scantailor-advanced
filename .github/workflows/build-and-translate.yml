@@ -57,18 +57,39 @@ jobs:
       run: |
         choco install boost-msvc-14.2 -y
         choco install cmake -y
+        choco install libjpeg-turbo -y
+        choco install libpng -y
+        choco install zlib -y
+        choco install libtiff -y
       shell: cmd
     
     - name: Update translations
       run: |
         mkdir build
         cd build
-        cmake ..
+        cmake .. `
+          -DJPEG_INCLUDE_DIR="C:\Program Files\libjpeg-turbo\include" `
+          -DJPEG_LIBRARY="C:\Program Files\libjpeg-turbo\lib\jpeg.lib" `
+          -DPNG_PNG_INCLUDE_DIR="C:\Program Files\libpng\include" `
+          -DPNG_LIBRARY="C:\Program Files\libpng\lib\libpng16.lib" `
+          -DZLIB_INCLUDE_DIR="C:\Program Files\zlib\include" `
+          -DZLIB_LIBRARY="C:\Program Files\zlib\lib\zlib.lib" `
+          -DTIFF_INCLUDE_DIR="C:\Program Files\libtiff\include" `
+          -DTIFF_LIBRARY="C:\Program Files\libtiff\lib\tiff.lib"
         cmake --build . --target update_translations
     
     - name: Compile translations
       run: |
         cd build
+        cmake .. `
+          -DJPEG_INCLUDE_DIR="C:\Program Files\libjpeg-turbo\include" `
+          -DJPEG_LIBRARY="C:\Program Files\libjpeg-turbo\lib\jpeg.lib" `
+          -DPNG_PNG_INCLUDE_DIR="C:\Program Files\libpng\include" `
+          -DPNG_LIBRARY="C:\Program Files\libpng\lib\libpng16.lib" `
+          -DZLIB_INCLUDE_DIR="C:\Program Files\zlib\include" `
+          -DZLIB_LIBRARY="C:\Program Files\zlib\lib\zlib.lib" `
+          -DTIFF_INCLUDE_DIR="C:\Program Files\libtiff\include" `
+          -DTIFF_LIBRARY="C:\Program Files\libtiff\lib\tiff.lib"
         cmake --build . --target compile_translations
     
     - name: Build project (Linux)
@@ -81,6 +102,15 @@ jobs:
       if: matrix.os == 'windows-2022'
       run: |
         cd build
+        cmake .. `
+          -DJPEG_INCLUDE_DIR="C:\Program Files\libjpeg-turbo\include" `
+          -DJPEG_LIBRARY="C:\Program Files\libjpeg-turbo\lib\jpeg.lib" `
+          -DPNG_PNG_INCLUDE_DIR="C:\Program Files\libpng\include" `
+          -DPNG_LIBRARY="C:\Program Files\libpng\lib\libpng16.lib" `
+          -DZLIB_INCLUDE_DIR="C:\Program Files\zlib\include" `
+          -DZLIB_LIBRARY="C:\Program Files\zlib\lib\zlib.lib" `
+          -DTIFF_INCLUDE_DIR="C:\Program Files\libtiff\include" `
+          -DTIFF_LIBRARY="C:\Program Files\libtiff\lib\tiff.lib"
         cmake --build . --config Release
     
     - name: Package artifacts (Linux)

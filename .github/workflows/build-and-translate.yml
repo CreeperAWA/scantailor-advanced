@@ -11,24 +11,24 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019]
+        os: [ubuntu-20.04, windows-2022]
         include:
           - os: ubuntu-20.04
             artifact-name: scantailor-advanced-linux
-          - os: windows-2019
+          - os: windows-2022
             artifact-name: scantailor-advanced-windows
     
     runs-on: ${{ matrix.os }}
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
     
     - name: Install Qt (Linux)
       if: matrix.os == 'ubuntu-20.04'
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         version: '5.15.2'
         host: 'linux'
@@ -38,8 +38,8 @@ jobs:
         modules: 'qttranslations'
     
     - name: Install Qt (Windows)
-      if: matrix.os == 'windows-2019'
-      uses: jurplel/install-qt-action@v3
+      if: matrix.os == 'windows-2022'
+      uses: jurplel/install-qt-action@v4
       with:
         version: '5.15.2'
         host: 'windows'
@@ -55,7 +55,7 @@ jobs:
         sudo apt-get install -y libboost-all-dev libjpeg-dev libpng-dev libtiff-dev zlib1g-dev cmake build-essential
     
     - name: Install dependencies (Windows)
-      if: matrix.os == 'windows-2019'
+      if: matrix.os == 'windows-2022'
       run: |
         choco install boost-msvc-14.2 -y
         choco install cmake -y
@@ -80,7 +80,7 @@ jobs:
         cmake --build . --config Release
     
     - name: Build project (Windows)
-      if: matrix.os == 'windows-2019'
+      if: matrix.os == 'windows-2022'
       run: |
         cd build
         cmake --build . --config Release
@@ -95,7 +95,7 @@ jobs:
         tar -czf ${{ matrix.artifact-name }}.tar.gz ${{ matrix.artifact-name }}
     
     - name: Package artifacts (Windows)
-      if: matrix.os == 'windows-2019'
+      if: matrix.os == 'windows-2022'
       run: |
         cd build
         mkdir ${{ matrix.artifact-name }}
@@ -106,20 +106,20 @@ jobs:
     
     - name: Upload build artifacts (Linux)
       if: matrix.os == 'ubuntu-20.04'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact-name }}
         path: build/${{ matrix.artifact-name }}.tar.gz
     
     - name: Upload build artifacts (Windows)
-      if: matrix.os == 'windows-2019'
-      uses: actions/upload-artifact@v3
+      if: matrix.os == 'windows-2022'
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.artifact-name }}
         path: build/${{ matrix.artifact-name }}.zip
     
     - name: Upload compiled translation files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: compiled-translations-${{ matrix.os }}
         path: |
